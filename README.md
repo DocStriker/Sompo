@@ -1,6 +1,6 @@
 # Sompo EC2 Test Command Lines
 
-![452548648-8faa8f5e-2916-49e2-a012-a1aa1a9ece23](https://github.com/user-attachments/assets/60e2b5df-17f7-4216-ba12-067fc9852c2e)
+![452548648-8faa8f5e-2916-49e2-a012-a1aa1a9ece23](https://github.com/user-attachments/assets/2b2bbba8-d85e-4fa1-948b-baf924552d0e)
 
 "ssh -i "Key_Pair" ec2-user@Public_DNS" -> conexão do EC2 no Windows PowerShell via SSH
 
