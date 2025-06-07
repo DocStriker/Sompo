@@ -1,6 +1,6 @@
 # Sompo EC2 Test Command Lines
 
-![image](https://github.com/user-attachments/assets/8faa8f5e-2916-49e2-a012-a1aa1a9ece23)
+![452548648-8faa8f5e-2916-49e2-a012-a1aa1a9ece23](https://github.com/user-attachments/assets/60e2b5df-17f7-4216-ba12-067fc9852c2e)
 
 "ssh -i "EC2_1TIAPF_Chave.pem" ec2-user@ec2-3-218-249-37.compute-1.amazonaws.com" -> conexão do EC2 no Windows PowerShell via SSH
 
