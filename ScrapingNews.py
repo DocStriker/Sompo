@@ -1,7 +1,5 @@
 from GoogleNews import GoogleNews
 import requests
-from bs4 import BeautifulSoup
-import requests
 import pandas as pd
 
 

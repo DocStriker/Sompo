@@ -17,7 +17,7 @@ def ParseToAgent(texto):
         no seguinte formato: "Rodovia/Rua, cidade, estado" """
         
 
-    client = genai.Client(api_key="AIzaSyA1JeVggj4JpgIjWKuIFNMjEKcEvKcPEQc")
+    client = genai.Client(api_key=api_token)
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt,
