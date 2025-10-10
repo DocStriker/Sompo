@@ -1,14 +1,8 @@
 from google import genai
 from google.genai import types
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
-api_token = os.getenv("GENAI_TOKEN")
 
 
-def ParseToAgent(texto):
+def ParseToAgent(texto, api_token):
 
     prompt = f"""
         No texto: {texto},
@@ -26,3 +20,6 @@ def ParseToAgent(texto):
         ),
     )
     return response.text
+
+if __name__ == '__main__':
+    print(ParseToAgent(""))

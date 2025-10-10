@@ -36,13 +36,19 @@ def searchFromGdelt():
 
 def Scrap():
     link_news = []
+    #gnews_links = searchFromGoogleNews()
+    gdelt_links = searchFromGdelt()
 
-    for nlgn in searchFromGoogleNews():
-        link_news.append(nlgn)
-    for nlgd in searchFromGdelt():
+    '''for nlgn in gnews_links:
+        if '&ved' in nlgn:
+            url_limpa = nlgn.split('&ved')[0]
+            link_news.append(url_limpa)
+        else:
+            link_news.append(nlgn)'''
+    for nlgd in gdelt_links:
         link_news.append(nlgd)
 
-    return link_news
+    return set(link_news)
 
 if __name__ == "__main__":
     for s in Scrap():
