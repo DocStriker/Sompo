@@ -48,7 +48,6 @@ pandas==2.3.2
 preshed==3.0.10
 proto-plus==1.26.1
 protobuf==5.29.5
-psycopg2==2.9.10
 psycopg2-binary==2.9.11
 pt_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/pt_core_news_sm-3.8.0/pt_core_news_sm-3.8.0-py3-none-any.whl#sha256=c304fa04db3af73cd08a250feacf560506e15a2ec2469bd1b09f06847f6b455c
 pyasn1==0.6.1

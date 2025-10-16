@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import os
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
-from main import main
+from agent_task import main
 
 load_dotenv()
 
