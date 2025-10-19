@@ -1,9 +1,16 @@
+#####################################################################################################
+# 1. Importação das bibliotecas
+
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
 
-def searchFromGdelt():
+#####################################################################################################
+# 2. Funções das APIs
 
+# Função da API do Gdelt para coleta de notícias
+def searchFromGdelt():
+    """usa a API do Gdelt para coletar urls de notícias globais e retorna um dataframe."""
     end_time = datetime.now()
     start_time = end_time - timedelta(days=3)
 
@@ -63,12 +70,16 @@ def searchFromGdelt():
 
     except requests.RequestException as e:
         print(f"Erro de conexão com GDELT: {e}")
-        return pd.DataFrame()
 
+        return pd.DataFrame() # Retorno em dataframe
+
+# Função para agrupar e normalizar as informações gerais do dataframe
 def Scrap():
     gdelt_df = searchFromGdelt().rename(columns={'seendate':'date'})
 
-    return gdelt_df
+    return gdelt_df # Retorno em dataframe
+
+#####################################################################################################
 
 if __name__ == "__main__":
     print(Scrap()['url'][:-1][0])

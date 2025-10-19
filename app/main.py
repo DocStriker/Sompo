@@ -1,4 +1,7 @@
-from fastapi import FastAPI, HTTPException
+#####################################################################################################
+# 1. Importação das bibliotecas
+
+from fastapi import FastAPI, Header, HTTPException, Depends
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
@@ -7,14 +10,30 @@ from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 from agent_task import main
 
+#####################################################################################################
+# 2. Configurando as variáveis de ambiente
+
 load_dotenv()
 
 db_endpoint = os.getenv('RDS_ENDPOINT')
+api_token = os.getenv('API_TOKEN')
 
-app = FastAPI()
+#####################################################################################################
+# 3. Configurando o FastAPI
+
+# Função para verificação do token da API
+def verify_token(x_api_key: str = Header(...)):
+    if x_api_key != api_token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+app = FastAPI(
+    title="NeoRoute API",
+    description="API para consulta de roubos de cargas, estados e coletas",
+    version="1.0.0",
+)
 
 origins = [
-    "http://localhost:3000" # Front local (React, por exemplo   # Seu domínio real (produção)
+    "http://localhost:3000" # Front local
 ]
 
 app.add_middleware(
@@ -25,7 +44,12 @@ app.add_middleware(
     allow_headers=["*"],              # Quais cabeçalhos podem ser enviados
 )
 
+#####################################################################################################
+# 4. Funções de utilidades
+
+# Função para se conectar ao banco RDS da AWS
 def get_connection():
+    """conecta ao banco RDS via PostgreSQL na porta 5432."""
     return psycopg2.connect(
         dbname="news_scrap",
         user="neoroute",
@@ -34,22 +58,29 @@ def get_connection():
         port="5432"
     )
 
+# Função para chama o agente Gemini
 async def run_agent_task():
+    """chama a função main() do script 'agent_task.py' e retorna um json do status."""
     main()
     # por exemplo, scrape + inserção no banco
     await asyncio.sleep(3)  # simula tempo de execução
     return {"status": "Agent executado com sucesso"}
 
-@app.post("/run_agent")
-async def run_agent():
+#####################################################################################################
+# 5. Criação das rotas da API
+
+# Chama o agente para executar a tarefa
+@app.post("/run_agent", tags=["AI Agent"])
+async def run_agent(auth: None = Depends(verify_token)):
     try:
         result = await run_agent_task()
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/total/{table_name}")
-def total_records(table_name: str):
+# Consulta o banco de dados para o total de registros na tabela
+@app.get("/total/{table_name}", tags=["Estados"])
+def total_records(table_name: str, auth: None = Depends(verify_token)):
     try:
         conn = get_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -62,8 +93,9 @@ def total_records(table_name: str):
         cur.close()
         conn.close()
 
-@app.get("/top_state/{table_name}")
-def top_state(table_name: str):
+# Consulta o banco de dados para o estado com o maior número de registros
+@app.get("/top_state/{table_name}", tags=["Estados"])
+def top_state(table_name: str, auth: None = Depends(verify_token)):
     """
     Retorna o estado com maior número de registros.
     A tabela deve conter uma coluna chamada 'state'.
@@ -90,12 +122,9 @@ def top_state(table_name: str):
         cur.close()
         conn.close()
 
-@app.get("/states/{table_name}")
-def top_state(table_name: str):
-    """
-    Retorna o estado com maior número de registros.
-    A tabela deve conter uma coluna chamada 'state'.
-    """
+# Consulta o banco de dados para retornar a lista de estados por quantidade de registros
+@app.get("/states/{table_name}", tags=["Estados"])
+def states(table_name: str, auth: None = Depends(verify_token)):
     try:
         conn = get_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -116,8 +145,9 @@ def top_state(table_name: str):
         cur.close()
         conn.close()
 
-@app.get("/top_carga")
-def top_carga():
+# Consulta o banco de dados para a carga com mais registro
+@app.get("/top_carga", tags=["Cargas"])
+def top_carga(auth: None = Depends(verify_token)):
     """Retorna a carga mais recorrente (com mais registros associados)."""
     try:
         conn = get_connection()
@@ -142,8 +172,9 @@ def top_carga():
         cur.close()
         conn.close()
 
-@app.get("/cargas")
-def top_carga():
+# Consulta o banco de dados para todos os tipos de cargas por quantidade de registro
+@app.get("/cargas", tags=["Cargas"])
+def cargas(auth: None = Depends(verify_token)):
     """Retorna a carga mais recorrente (com mais registros associados)."""
     try:
         conn = get_connection()
@@ -166,9 +197,9 @@ def top_carga():
         cur.close()
         conn.close()
 
-# 🔹 Rota 4 — Ocorrências por dia
-@app.get("/roubos_por_dia")
-def ocorrencias_por_dia():
+# Consulta o banco de dados por ocorrências por dia
+@app.get("/roubos_por_dia", tags=["Cargas"])
+def ocorrencias_por_dia(auth: None = Depends(verify_token)):
     """Retorna o número de ocorrências (rotas) por dia."""
     try:
         conn = get_connection()
@@ -186,6 +217,27 @@ def ocorrencias_por_dia():
         data = [{"date": str(r["date"]), "total": r["total"]} for r in results]
         return {"ocorrencias_por_dia": data}
 
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        cur.close()
+        conn.close()
+
+# Consulta o banco para buscar as coordenadas geradas a partir das urls
+@app.get("/list_geodata", tags=["Coordenadas"])
+def get_coordenadas(auth: None = Depends(verify_token)):
+    try:
+        conn = get_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        query = """
+            SELECT CONCAT(LEFT(url, 20), '...') AS url, coord FROM rotas;
+            """
+        
+        cur.execute(query)
+        results = cur.fetchall()
+
+        return results
+    
     except Exception as e:
         return {"error": str(e)}
     finally:

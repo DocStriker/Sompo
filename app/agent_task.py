@@ -1,3 +1,4 @@
+#####################################################################################################
 # 1. Importação de bibliotecas
 
 import requests
@@ -14,17 +15,21 @@ import unicodedata
 from web_scrapping import Scrap # Importa a função de scraping que retorna uma lista de urls
 from ai_agent import ParseToAgent # Importa a função de AI Agent para procurar com base no prompt
 
+#####################################################################################################
 # 2. Configuração de variáveis de ambiente
 
 load_dotenv()
 
 api_token = os.getenv("GENAI_TOKEN")
 db_endpoint = os.getenv("RDS_ENDPOINT")
-scrap_df = Scrap()
+scrap_df = Scrap() # Chama a função Scrap() do script 'web_scrapping.py' no qual retorna um dataframe
 
-# 3. Coleta o texto de todas as url de notícias
+#####################################################################################################
+# 3. Funções de utilidades
 
+# Função para tratar dos acentos em uma string
 def remove_acentos(texto):
+    """entrada: 'texto' -> 'string', saída: 'string' normalizada sem acentos."""
     if not texto:
         return ""
     # Normaliza para NFD (separa caracteres + acentos)
@@ -32,7 +37,9 @@ def remove_acentos(texto):
     # Remove caracteres não-ASCII (acentos)
     return "".join([c for c in nfkd if not unicodedata.combining(c)])
 
+# Função que gera as coordenadas de acordo o endereço passado como string
 def GeoLocator(adress):
+    """recebe 'adress' como string e retorna um json das coordenadas."""
     geolocator = Nominatim(user_agent="roubo_carga_scraper")
 
     geo_dados = []
@@ -47,10 +54,11 @@ def GeoLocator(adress):
     except Exception as e:
         print("Erro geocodificando:", adress, e)
     
-    return geo_dados
+    return geo_dados # retorno em json
 
+# Função de chamada do agente Gemini
 def Agent(url, api_token):
-
+    """recebe uma 'url' + 'api_token' para o agente no qual retorna um json da resposta."""
     try:
         html = requests.get(url, timeout=6).text  # timeout em segundos
         soup = BeautifulSoup(html, "html.parser")
@@ -68,11 +76,17 @@ def Agent(url, api_token):
 
     return response # Resposta em JSON.
 
+# Função na qual extrai o formato endereço do json de resposta do agente
 def extract_adress(json):
+    """recebe um json e retorna uma string."""
     adress = f"{json['street']}, {json['city'] + ', 'if json['city'] else ''}{json['state']}"
 
-    return adress
+    return adress # Retorno em string
 
+#####################################################################################################
+# 4. Iniciando o agente
+
+# Função principal no qual conecta ao banco de dados RDS AWS e chama o agente
 def main():
 
     conn = psycopg2.connect(
@@ -183,27 +197,17 @@ def main():
                     ON CONFLICT DO NOTHING;
                 """, (rota_id, cargo_id))
 
-
+            # Salva no banco RDS
             conn.commit()
             print(f"Rota registrada.")
 
-        
-
     print('Concluído.')
 
+    # Fecha as conexões
     cur.close()
     conn.close()
 
-if __name__ == '__main__':
+#####################################################################################################
 
-    rjson = [{'street': 'BR-163',
-                'city': '',
-                'state': 'Mato Grosso', 
-                'cargo_type': 'fertilizantes, grãos, combustíveis, insumos agrícolas, defensivos agrícolas, bobinas de ferro'},
-             {'street': 'BR-070',
-               'city': '',
-                'state': 'Mato Grosso',
-                'cargo_type': 'fertilizantes, grãos, combustíveis, insumos agrícolas, defensivos agrícolas, bobinas de ferro'},
-            ]
-    
+if __name__ == '__main__':
     main()
