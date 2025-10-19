@@ -69,7 +69,7 @@ def Agent(url, api_token):
     return response # Resposta em JSON.
 
 def extract_adress(json):
-    adress = f'{json['street']}, {json['city'] + ', 'if json['city'] else ''}{json['state']}'
+    adress = f"{json['street']}, {json['city'] + ', 'if json['city'] else ''}{json['state']}"
 
     return adress
 
